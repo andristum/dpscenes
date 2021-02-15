@@ -4,8 +4,8 @@ Scenes = {
 }
 
 Admins = {
-	--"discord:82089430562635776",
-	--"steam:1100001053ac3bb",
+	"discord:82089430562635776",
+	"steam:1100001053ac3bb",
 }
 
 function CloseToOtherScene(t)
