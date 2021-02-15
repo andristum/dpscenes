@@ -97,7 +97,7 @@ end
 
 function DrawScene(i,p)
 	local Distance = Distance(i.Location, p)
-	if Distance < 15 then
+	if Distance < 10 then
 		local s = ((1/Distance)*2)*(1/GetGameplayCamFov())*80
 		local a = 10 * math.floor(s*20)
 		if a > 225 then a = 225 elseif a < 40 then a = 40 end
