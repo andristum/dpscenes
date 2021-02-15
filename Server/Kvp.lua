@@ -1,4 +1,4 @@
-local Limit = 1000
+local Limit = 3000
 
 if Config.Database == "KVP" then
 
