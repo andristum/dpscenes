@@ -14,9 +14,9 @@ function ResetScene()
 	Scene = {
 		State = false,
 		Info = false,
-		Hours = 24,
+		Hours = Config.SceneLength[1].Hours,
 		ShowAge = 1,
-		Text = {Text = "", Font = 1, Size = 0.3, Outline = 1},
+		Text = {Text = "", Font = 1, Size = Config.FontSize.Min, Outline = 1},
 		Background = {
 			Sprite = 1,
 			Colour = {0,0,0},
