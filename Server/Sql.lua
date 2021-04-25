@@ -8,12 +8,14 @@ if Config.Database == "SQL" then
 			if Expired < Today then
 				MySQL.Async.execute("DELETE FROM scenes WHERE id = @id", { ['@id'] = k }, function()
 					Scenes.Current[k] = nil
+					TriggerClientEvent("Scene:Delete", -1, k)
 				end)
 				Count = Count +1
 			end
 		end
-		if Count > 0 then log("Deleted "..Count.." expired scenes.") end
-		TriggerClientEvent("Scene:RecieveAll", -1, Scenes.Current)
+		if Count > 0 then
+			log("Deleted "..Count.." expired scenes.")
+		end
 	end
 
 	DB.NewScene = function(scene, Src, Id, CreationTime, NewScene)
@@ -46,7 +48,7 @@ if Config.Database == "SQL" then
 	DB.RemoveScene = function(id)
 		MySQL.Async.execute("DELETE FROM scenes WHERE id = @id", {['@id'] = id}, function()
 			Scenes.Current[id] = nil
-			TriggerClientEvent("Scene:RecieveAll", -1, Scenes.Current)
+			TriggerClientEvent("Scene:Delete", -1, id)
 		end)
 	end
 

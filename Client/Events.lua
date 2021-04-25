@@ -31,3 +31,13 @@ AddEventHandler("Scene:Create", function(T)
 		Scene.State = "Placing"
 	end
 end)
+
+LastCopiedScene = nil
+RegisterNetEvent("Scene:RecieveCopy")
+AddEventHandler("Scene:RecieveCopy", function(T)
+	LastCopiedScene = T
+	Scene = T
+	if not Scene.State then
+		Scene.State = "Placing"
+	end
+end)

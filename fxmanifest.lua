@@ -24,7 +24,8 @@ client_scripts {
 	'Client/Controls.lua',
 	'Client/GUI.lua',
 	'Client/Scenes.lua',
-	'Client/Events.lua'
+	'Client/Events.lua',
+	'Client/Framework.lua'
 }
 
 shared_scripts {

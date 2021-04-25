@@ -9,18 +9,21 @@ Config = {
 	]]--
 	Database = "KVP",
 	-- Max scenes a player is allowed to have on their own.
-	MaxScenes = 10,
+	MaxScenes = 20,
 	FontSize = {
 		Min = 0.25,
 		Max = 0.65
 	},
 	-- Amount of hours a scene is allowed to be up for.
 	SceneLength = {
+		{Hours = 1},
+		{Hours = 6},
+		{Hours = 12},
 		{Hours = 24},
 		{Hours = 48},
 		{Hours = 72},
-		{Hours = 96},
 	},
+	MaxSceneLength = 72, -- For validation upon creating a scene, incase someone has a preset saved with Hours = 128 or something.
 	--[[ 
 		Blacklist works like this:
 		If the function returns true then it displays the error text.
@@ -66,20 +69,19 @@ Config = {
 		{
 			Name = "None",
 			Alter = function(e)
-				Scene.Function = {
-					Current = "None",
-					Prefix = "",
-					Variable = "",
-				}
+				Scene.Function = false
 			end 
 		},
 		{
 			Name = "Emote",
 			Prefix = "/e",
 			Alter = function()
-				local Arg = Scene.Function.Variable
-				if Scene.Function.Current ~= "Emote" then
-					Arg = ""
+				local Arg = ""
+				if Scene.Function then
+					Arg = Scene.Function.Variable
+					if Scene.Function.Current ~= "Emote" then
+						Arg = ""
+					end
 				end
 				local New = TextInput("What emote do you want the scene to trigger?", Arg, 12)
 				if New ~= "" then
@@ -96,9 +98,12 @@ Config = {
 			Name = "Me",
 			Prefix = "/me",
 			Alter = function()
-				local Arg = Scene.Function.Variable
-				if Scene.Function.Current ~= "Me" then
-					Arg = ""
+				local Arg = ""
+				if Scene.Function then
+					Arg = Scene.Function.Variable
+					if Scene.Function.Current ~= "Me" then
+						Arg = ""
+					end
 				end
 				local New = TextInput("What action do you want the scene to trigger?", Arg, 90)
 				if New ~= "" then
@@ -108,6 +113,32 @@ Config = {
 						Variable = New,
 					}
 					Scene.State = "Placing"
+				end
+			end
+		},
+		{
+			Name = "GPS",
+			Function = function(c)
+				SetNewWaypoint(c.x, c.y)
+			end,
+			Alter = function()
+				if IsWaypointActive() then
+					local blip = GetFirstBlipInfoId(8)
+    				local coord = false
+    				if (blip ~= 0) then
+    				    coord = GetBlipCoords(blip)
+    				    Scene.Function = {
+							Current = "GPS",
+							Prefix = false,
+							Description = "Set your waypoint to %s?",
+							Variable = coord,
+							String = GetStreetNameFromHashKey(GetStreetNameAtCoord(coord.x, coord.y, coord.z)),
+						}
+    				else
+    					Chat("Error getting waypoint")
+    				end
+				else
+					Chat("You have to have a waypoint active.")
 				end
 			end
 		},

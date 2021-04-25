@@ -2,7 +2,8 @@ DB = {}
 
 function PrepareSceneForDatabase(i)
 	-- Here we just clear some of the data thats not needed but other players.
-	local s = i; s.State = nil s.Info = nil s.Background.Colour.ColourName = nil
+	local s = i; s.State = nil s.Info = nil s.Background.ColourName = nil
+	if s.Hours > Config.MaxSceneLength then s.Hours = Config.MaxSceneLength end
 	return json.encode(s)
 end
 
@@ -35,15 +36,32 @@ AddEventHandler("Scene:New", function(New)
 end)
 
 RegisterNetEvent("Scene:AttemptDelete")
-AddEventHandler("Scene:AttemptDelete", function(Id)
+AddEventHandler("Scene:AttemptDelete", function(Id, Move)
 	local Src = source
 	local Me = GetLicense(Src, Config.IdentifierType)
-	local ScenesOwner = Scenes.Current[Id].Owner
+	local SceneToDelete = Scenes.Current[Id]
 	local Override = CanDeleteAnyScene(Me)
-	if Me == ScenesOwner or Override then
-		DB.RemoveScene(Id)
-		Chat(Src, Lang("RemovedScene"))
+	if not Move then
+		if Me == SceneToDelete.Owner or Override then
+			DB.RemoveScene(Id)
+			Chat(Src, Lang("RemovedScene"))
+		else
+			Chat(Src, Lang("NoPerms"))
+		end
 	else
-		Chat(Src, Lang("NoPerms"))
+		DB.RemoveScene(Id)
+	end
+end)
+
+RegisterNetEvent("Scene:AttemptCopy")
+AddEventHandler("Scene:AttemptCopy", function(Id)
+	local Src = source
+	local Me = GetLicense(Src, Config.IdentifierType)
+	local SceneToCopy = Scenes.Current[Id]
+	--local Override = CanDeleteAnyScene(Me)
+	if Me == SceneToCopy.Owner then
+		TriggerClientEvent("Scene:RecieveCopy", Src, SceneToCopy)
+	else
+		Chat(Src, Lang("OnlyCopyOwn"))
 	end
 end)

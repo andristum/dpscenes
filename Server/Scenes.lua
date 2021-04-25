@@ -12,7 +12,7 @@ function CloseToOtherScene(t)
 	local Nearby = false
 	for k,v in pairs(Scenes.Current) do
 		local Dis = Distance(t.Location, v.Location)
-		if Dis < 1.0 then Nearby = true end
+		if Dis < 0.2 then Nearby = true end
 	end 
 	return Nearby
 end
@@ -44,11 +44,10 @@ CreateThread(function()
 	end
 end)
 
-RegisterCommand("scene", function(source, args)
-	local Src = source
+RegisterCommand("scene", function(Src, Arguments)
 	if not Scenes.Cooldowns[Src] then
 		Scenes.Cooldowns[Src] = 1
-		local Input = table.concat(args, " ") local Length = string.len(Input)
+		local Input = table.concat(Arguments, " ") local Length = string.len(Input)
 		if Length <= 280 and Length > 3 then
 			TriggerClientEvent("Scene:Create", Src, Input)
 		else
@@ -57,6 +56,12 @@ RegisterCommand("scene", function(source, args)
 	else
 		Chat(Src, Lang("CantRightNow"))
 	end
+end)
+
+RegisterCommand("scenestats", function(Src, Arguments)
+	local TotalSceneCount = 0 for k,v in pairs(Scenes.Current) do TotalSceneCount = TotalSceneCount +1 end
+	local Formatted = "Active Scenes : "..TotalSceneCount.."x"
+	Chat(Src, Formatted)
 end)
 
 RegisterNetEvent("Scene:Request")

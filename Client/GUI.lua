@@ -4,7 +4,8 @@ Menu = {
 	Option3 = 1,
 	FontOption = 1,
 	FunctionOption = 1,
-	TimeOption = 1,
+	PresetOption = 1,
+	TimeOption = 4,
 	ShowAgeOption = 1,
 }
 
@@ -30,7 +31,7 @@ Menus = {
 	{
 		Modifier = "Switch",
 		Label = Lang("TextSize"),
-		Desc = string.format(Lang("TextDesc"), Config.FontSize.Min, Config.FontSize.Max),--"Modifies text size. ("..Config.FontSize.Min.." to "..Config.FontSize.Max..")",
+		Desc = string.format(Lang("TextDesc"), Config.FontSize.Min, Config.FontSize.Max),
 		Current = function()
 			return Scene.Text.Size
 		end,
@@ -153,9 +154,9 @@ Menus = {
 		end,
 		Function = function()
 			if CurrentKey("LEFT") then
-				Scene.Background.Settings.x = AlterOverflow(Scene.Background.Settings.x, -0.002, -0.05, 0.05)
+				Scene.Background.Settings.x = AlterOverflow(Scene.Background.Settings.x, -0.002, -0.2, 0.2)
 			elseif CurrentKey("RIGHT") then
-				Scene.Background.Settings.x = AlterOverflow(Scene.Background.Settings.x, 0.002, -0.05, 0.05)
+				Scene.Background.Settings.x = AlterOverflow(Scene.Background.Settings.x, 0.002, -0.2, 0.2)
 			end
 		end
 	},
@@ -167,9 +168,9 @@ Menus = {
 		end,
 		Function = function()
 			if CurrentKey("LEFT") then
-				Scene.Background.Settings.y = AlterOverflow(Scene.Background.Settings.y, -0.002, -0.05, 0.05)
+				Scene.Background.Settings.y = AlterOverflow(Scene.Background.Settings.y, -0.002, -0.2, 0.2)
 			elseif CurrentKey("RIGHT") then
-				Scene.Background.Settings.y = AlterOverflow(Scene.Background.Settings.y, 0.002, -0.05, 0.05)
+				Scene.Background.Settings.y = AlterOverflow(Scene.Background.Settings.y, 0.002, -0.2, 0.2)
 			end
 		end
 	},
@@ -224,14 +225,37 @@ Menus = {
 		Label = Lang("InteractFunction"),
 		Desc = Lang("InteractDesc"),
 		Current = function()
-			local Cs = Scene.Function.Current
-			if Scene.Function.Variable ~= "" then Cs = Cs.." ("..Scene.Function.Variable..")" end
-			return Cs
+			if Scene.Function then
+				local Cs = Scene.Function.Current
+				if Scene.Function.Current == "GPS" then
+					Cs = Cs.." ("..Scene.Function.String..")"
+				elseif Scene.Function.Variable ~= "" then
+					Cs = Cs.." ("..Scene.Function.Variable..")"
+				end
+				return Cs
+			else
+				return ""
+			end
 		end,
 		Function = function(x,y,control)
 			if IsControlJustPressed(0, GetKey("ENTER")) and control and not Scene.Info then
 				CreateThread(function()
 					Scene.State = "Functions"
+				end)
+			end
+		end
+	},
+	{
+		Modifier = "Enter",
+		Label = Lang("Presets"),
+		Desc = Lang("PresetsDesc"),
+		Current = function()
+			return ""
+		end,
+		Function = function(x,y,control)
+			if IsControlJustPressed(0, GetKey("ENTER")) and control and not Scene.Info then
+				CreateThread(function()
+					Scene.State = "Presets"
 				end)
 			end
 		end
@@ -273,6 +297,84 @@ function DrawColourSelect()
 			end
 		end
 	end
+end
+
+function DeletePreset(k)
+	Menu.PresetOption = Menu.PresetOption-1
+	Presets[k] = nil
+	SavePresets()
+end
+
+function SaveSceneForPresets(s)
+	local PresetSceneName = TextInput(Lang("PresetName"), "Preset-"..#Presets, 10)
+	if PresetSceneName ~= "" then
+		local Preset = {
+			Name = PresetSceneName,
+			Saved = s
+		}
+		table.insert(Presets, Preset)
+		SavePresets()
+	else
+		--didnt enter name
+	end
+end
+
+function DrawPresets()
+	local x = 0.765 local y = 0.59 local Offset = 0.025
+
+	local PresetMenu = {
+		{
+			Name = Lang("PresetSave"),
+			Handler = function()
+				SaveSceneForPresets(Scene)
+			end
+		},
+	}
+	for k,v in pairs(Presets) do
+		local Preset = {
+			Name = v.Name,
+			PresetId = k,
+			Description = Lang("PresetDelete"),
+			Handler = function()
+				Scene = v.Saved
+			end
+		}
+		table.insert(PresetMenu, Preset)
+	end
+
+	if CurrentKey("DOWN") then
+		Menu.PresetOption = AlterOverflow(Menu.PresetOption, 1, 1, #PresetMenu, true)
+	elseif CurrentKey("UP") then
+		Menu.PresetOption = AlterOverflow(Menu.PresetOption, -1, 1, #PresetMenu, true)
+	end
+
+	if IsControlJustPressed(0, GetKey("BACKSPACE")) then
+		Scene.State = "Placing"
+	end
+
+	local Desc = false
+
+	for k,v in pairs(PresetMenu) do
+		Text({Text = v.Name, x = x-0.149, y = y+Offset*k-0.0269, Align = 1, Scale = 0.30, Outline = true})
+		if Menu.PresetOption == k then
+			DrawSprite("dpscenes", "SlickBar", x-0.089, y+Offset*k-0.015, 0.13, 0.023, 0.0, 0, 120, 210, 255)
+			if IsControlJustPressed(0, GetKey("ENTER")) then
+				v.Handler()
+			elseif IsControlJustPressed(0, GetKey("DELETE")) then
+				if v.PresetId then
+					DeletePreset(v.PresetId)
+				end
+			end
+			if v.Description then
+				local Description = v.Description
+				Text({Text = Description, x = x-0.149, y = y+Offset*(#PresetMenu+1)-0.02, Align = 1, Scale = 0.30, Outline = true, Wrap = {x = 0.0, y = 0.90}})
+				DrawSprite("dpscenes", "SlickFade", x-0.089, y+Offset*(#PresetMenu+1), 0.13, 0.050, -90.0, 0, 0, 0, 140)
+			end
+		else
+			DrawSprite("dpscenes", "SlickBar", x-0.089, y+Offset*k-0.015, 0.13, 0.023, 0.0, 0, 0, 0, 255)
+		end
+	end
+
 end
 
 function DrawFunctions()
@@ -348,7 +450,7 @@ function DrawInfo()
 end
 
 function DrawMenu(control)
-	local x = 0.75 local y = 0.55 local Offset = 0.025
+	local x = 0.75 local y = 0.475 local Offset = 0.025
 	DrawSprite("dpscenes", "KeyE", x+0.005, y-0.005, 0.027, 0.05, 0.0, 255, 255, 255, 255)
 	Text({Text = Lang("Confirm"), x = x+0.013, y = y-0.009, Align = 1, Scale = 0.30, Outline = true})
 	DrawSprite("dpscenes", "KeyX", x+0.045, y-0.005, 0.027, 0.05, 0.0, 255, 255, 255, 255)
